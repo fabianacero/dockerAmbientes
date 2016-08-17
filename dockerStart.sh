@@ -202,6 +202,12 @@ case $param in
 	;;
 esac
 done
+#Valido que tenga instalado docker de no ser asi se instalara
+if [ -x /usr/bin/docker ] || [ -x /usr/sbin/docker ]; then
+	echo "Tienes Docker Instalado..."
+else
+	curl -sSL https://get.docker.com/ | sh
+fi
 # Valido parametros requeridos
 if [ -z $ENVSITE ] && [ -z $ENVHODELINE ] && [ -z $ENVSECURE ]; then
         parse "Especifique el entorno a trabajar"
