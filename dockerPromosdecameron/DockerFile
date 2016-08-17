@@ -1,0 +1,9 @@
+FROM jgomez17/centos-php54:balancer
+ADD ./dockerPromosdecameron/balancerSite.conf /scripts/balancer.conf
+ADD ./dockerPromosdecameron/httpd-vhosts.conf /etc/httpd/conf/httpd-vhosts.conf
+RUN mkdir /var/www/html/www.decameron.com
+RUN mkdir /var/www/html/promos-decameron
+RUN service httpd restart
+EXPOSE 80
+CMD ["/usr/sbin/httpd", "-D", "FOREGROUND"]
+
