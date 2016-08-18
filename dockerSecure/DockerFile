@@ -3,6 +3,5 @@ ADD ./dockerSecure/httpd-vhosts.conf /etc/httpd/conf/httpd-vhosts.conf
 RUN mkdir /var/www/html/secure-web-gds
 RUN mkdir /var/www/html/amadeusdecameron
 RUN mkdir /var/www/html/pnp-webservice
-RUN service httpd restart
 EXPOSE 80
 CMD ["/bin/bash"]
