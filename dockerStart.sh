@@ -27,7 +27,7 @@ printFinalHelp(){
 	eval $hostConfig
 
 	echo "\nPara ingresar a sus servidores ejecute los siguientes comandos:"
-	command="docker inspect --format='docker exec -it {{.Config.Hostname}} bash' $i $containers"
+	command="docker inspect --format='{{.Name}}:$ docker exec -it {{.Config.Hostname}} bash' $i $containers"
 	eval $command
 	echo "\n"
 }
@@ -95,12 +95,32 @@ runEnviroments(){
 			docker rm $(docker inspect --format='{{.Id}}' $i $containerName)
 		fi
 		echo " \-Creando contenedor ($containerName)"
-                command="docker run -dt --name $containerName $RUTA_PARTICULARES -v $RUTA_TEMPORAL:/var/www/temporal/:rw -v $RUTA_CRT_HW:/var/www/html/securep.decameron.com.crt:rw -v $RUTA_KEY_HW:/var/www/html/securep.decameron.com.key:rw $RUTA_AGENCIAS jgomez17/centos-php54:site"
+                command="docker run -dt --name $containerName $RUTA_PARTICULARES -v $RUTA_TEMPORAL:/var/www/temporal/:rw -v $RUTA_CRT_HW:/var/www/html/securep.decameron.com.crt:rw -v $RUTA_KEY_HW:/var/www/html/securep.decameron.com.key:rw $RUTA_AGENCIAS jgomez17/centos-php54:$containerName"
 		eval $command
 		
 		containerId=$(docker inspect --format='{{.Id}}' $i $containerName)
 		if [ ! -z $containerId ] ; then
                 	echo "\n \-Contenedor ($containerName) creado con id ($containerId) [done]"
+			principalSite=$(cat dockerPromosdecameron/balancer.conf | jq ".principal" | sed 's/"//g')
+			node1Site=$(cat dockerPromosdecameron/balancer.conf | jq ".sites.nodo1" | sed 's/"//g')
+			node2Site=$(cat dockerPromosdecameron/balancer.conf | jq ".sites.nodo2" | sed 's/"//g')
+			# Se generan Hosts en los container
+			command="docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $i $containerName"	
+			ipcontainerSite=$(eval $command)
+			hostsSite="docker exec -it $containerId bash -c \"echo '$ipcontainerSite	$node1Site' >> /etc/hosts\""
+			eval $hostsSite
+			hostsSite="docker exec -it $containerId bash -c \"echo '$ipcontainerSite	$node2Site' >> /etc/hosts\""
+			eval $hostsSite
+			# si no existe el hosts lo agregamos
+			if ! grep -q "$principalSite" /etc/hosts ; then 
+				echo "$ipcontainerSite	$principalSite" >> /etc/hosts
+			else
+				# si existe lo modificamos a la nueva ip
+				cp /etc/hosts /etc/hosts_bk
+				cat /etc/hosts_bk | sed "s/.*$principalSite/$ipcontainerSite\t$principalSite/g" > /etc/hosts
+
+
+			fi
 		fi
 
         fi
@@ -122,19 +142,39 @@ runEnviroments(){
 			docker rm $(docker inspect --format='{{.Id}}' $i $containerName)
 		fi
 		echo " \-Creando contenedor ($containerName)"
-                command="docker run -dt --name $containerName -v $RUTA_HODELINE:/var/www/html/decameron:rw -v $RUTA_CRT_HW:/var/www/html/securep.decameron.com.crt:rw -v $RUTA_KEY_HW:/var/www/html/securep.decameron.com.key:rw jgomez17/centos-php54:hodeline"
+                command="docker run -dt --name $containerName -v $RUTA_HODELINE:/var/www/html/decameron:rw -v $RUTA_CRT_HW:/var/www/html/securep.decameron.com.crt:rw -v $RUTA_KEY_HW:/var/www/html/securep.decameron.com.key:rw jgomez17/centos-php54:$containerName"
 		eval $command
 		
 		containerId=$(docker inspect --format='{{.Id}}' $i $containerName)
 		if [ ! -z $containerId ] ; then
                 	echo "\n \-Contenedor ($containerName) creado con id ($containerId) [done]"
+			principalHW=$(cat dockerHodelineweb/balancer.conf | jq ".principal" | sed 's/"//g')
+			node1HW=$(cat dockerHodelineweb/balancer.conf | jq ".sites.nodo1" | sed 's/"//g')
+			node2HW=$(cat dockerHodelineweb/balancer.conf | jq ".sites.nodo2" | sed 's/"//g')	
+			# Se generan Hosts en los container
+			command="docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $i $containerName"	
+			ipcontainerHW=$(eval $command)
+			hostsHW="docker exec -it $containerId bash -c \"echo '$ipcontainerHW	$node1HW' >> /etc/hosts\""
+			eval $hostsHW
+			hostsHW="docker exec -it $containerId bash -c \"echo '$ipcontainerHW	$node2HW' >> /etc/hosts\""
+			eval $hostsHW
+			# si no existe el hosts lo agregamos
+			if ! grep -q "$principalHW" /etc/hosts ; then 
+				echo "$ipcontainerHW	$principalHW" >> /etc/hosts
+			else
+				# si existe lo modificamos a la nueva ip
+				cp /etc/hosts /etc/hosts_bk
+				cat /etc/hosts_bk | sed "s/.*$principalHW/$ipcontainerHW\t$principalHW/g" > /etc/hosts
+
+
+			fi
 		fi
         fi
 
         if [ ! -z $ENVSECURE ] && $ENVSECURE; then
                 # Construye la caja del site
                 echo " \n\-Corriendo entorno de site ..."
-		containerName="secure"
+		containerName="securep"
 		containers="$containers $containerName"
 		containerId=$(docker inspect --format='{{.Id}}' $i $containerName)
 		# Validando el directorio principal
@@ -161,7 +201,7 @@ runEnviroments(){
 			docker rm $(docker inspect --format='{{.Id}}' $i $containerName)
 		fi
 		echo " \-Creando contenedor ($containerName)"
-                command="docker run -dt --name $containerName $RUTA_SECURE $RUTA_AMADEUS $RUTA_PNP -v $RUTA_CRT_HW:/var/www/html/securep.decameron.com.crt:rw -v $RUTA_KEY_HW:/var/www/html/securep.decameron.com.key:rw jgomez17/centos-php54:secure"
+                command="docker run -dt --name $containerName $RUTA_SECURE $RUTA_AMADEUS $RUTA_PNP -v $RUTA_CRT_HW:/var/www/html/securep.decameron.com.crt:rw -v $RUTA_KEY_HW:/var/www/html/securep.decameron.com.key:rw jgomez17/centos-php54:$containerName"
 		eval $command
 		
 		containerId=$(docker inspect --format='{{.Id}}' $i $containerName)
@@ -202,6 +242,17 @@ case $param in
 	;;
 esac
 done
+#Valido que tenga instalado jq para poder procesar la informacion de configuracion
+if [ -x /usr/bin/jq ] || [ -x /usr/sbin/jq ]; then
+	echo "Tienes instalado JQ para archivos json"
+else
+	echo "Instalado JQ para archivos json..."
+	if [ -f /etc/debian_version ]; then
+		apt-get install -y jq
+	elif [ -f /etc/redhat-release ]; then
+		yum install -y jq
+	fi
+fi
 #Valido que tenga instalado docker de no ser asi se instalara
 if [ -x /usr/bin/docker ] || [ -x /usr/sbin/docker ]; then
 	echo "Tienes Docker Instalado..."
