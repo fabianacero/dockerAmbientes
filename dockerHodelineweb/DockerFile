@@ -1,8 +1,7 @@
 FROM jgomez17/centos-php54:balancer
-ADD ./dockerHodelineweb/balancerHW.conf /scripts/balancer.conf
+ADD ./dockerHodelineweb/balancer.conf /scripts/balancer.conf
 ADD ./dockerHodelineweb/httpd-vhosts.conf /etc/httpd/conf/httpd-vhosts.conf
 RUN php /scripts/balancer.php
 RUN mkdir /var/www/html/decameron
-RUN service httpd restart
 EXPOSE 80
-CMD ["/usr/sbin/httpd", "-D", "FOREGROUND"]
+CMD ["/bin/bash"]
