@@ -257,8 +257,18 @@ fi
 if [ -x /usr/bin/docker ] || [ -x /usr/sbin/docker ]; then
 	echo "Tienes Docker Instalado..."
 else
+	echo "Instalando Docker..."
 	curl -sSL https://get.docker.com/ | sh
 fi
+ps -ef | grep dockerd | grep -v grep
+if [ $?  -eq "0" ] ; then
+	echo " \-El proceso esta corriendo" 
+else
+	echo " \-El proceso no esta corriendo. Intentando iniciar el servicio ..." && service docker start
+	ps -ef | grep dockerd | grep -v grep
+	[ $?  -eq "0" ] && echo " \-El proceso esta corriendo" || printError "No fue posible iniciar el servicio. Intentelo nuevamente"
+fi
+
 # Valido parametros requeridos
 if [ -z $ENVSITE ] && [ -z $ENVHODELINE ] && [ -z $ENVSECURE ]; then
         parse "Especifique el entorno a trabajar"
