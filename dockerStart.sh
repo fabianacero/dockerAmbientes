@@ -100,15 +100,15 @@ runEnviroments(){
                 command="docker run -dt --name $containerName $RUTA_SECURE $RUTA_AMADEUS $RUTA_PNP -v $RUTA_CRT_HW:/var/www/html/securep.decameron.com.crt:rw -v $RUTA_KEY_HW:/var/www/html/securep.decameron.com.key:rw jgomez17/centos-php54:secure"
 		eval $command
 		
-		containerId=$(docker inspect --format='{{.Id}}' $i $containerName)
-		if [ ! -z $containerId ] ; then
-                	echo "\n \-Contenedor ($containerName) creado con id ($containerId) [done]"
-			service="docker exec -it $containerId /bin/bash -c 'service httpd start'"
+		containerIdSecure=$(docker inspect --format='{{.Id}}' $i $containerName)
+		if [ ! -z $containerIdSecure ] ; then
+                	echo "\n \-Contenedor ($containerName) creado con id ($containerIdSecure) [done]"
+			service="docker exec -it $containerIdSecure /bin/bash -c 'service httpd start'"
 			eval $service
 			principalSecure=$(cat dockerSecure/balancer.conf | jq ".principal" | sed 's/"//g')
 			principalAmadeus=$(cat dockerSecure/balancer.conf | jq ".amadeus" | sed 's/"//g')
 			principalPnp=$(cat dockerSecure/balancer.conf | jq ".pnp" | sed 's/"//g')
-			service="docker exec -it $containerId /bin/bash -c 'service httpd start'"
+			service="docker exec -it $containerIdSecure /bin/bash -c 'service httpd start'"
 			eval $service
 			# Se generan Hosts en los container
 			command="docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $i $containerName"	
@@ -161,8 +161,11 @@ runEnviroments(){
 			echo " \-Eliminando contenedor ($containerName)"
 			docker rm $(docker inspect --format='{{.Id}}' $i $containerName)
 		fi
+		if [ ! -d $RUTA_TEMPORAL ] ; then
+			printError "\n\- ($RUTA_TEMPORAL) $msg"
+		fi
 		echo " \-Creando contenedor ($containerName)"
-                command="docker run -dti --name $containerName -v $RUTA_HODELINE:/var/www/html/decameron:rw -v $RUTA_CRT_HW:/var/www/html/securep.decameron.com.crt:rw -v $RUTA_KEY_HW:/var/www/html/securep.decameron.com.key:rw jgomez17/centos-php54:hodeline"
+                command="docker run -dti --name $containerName -v $RUTA_HODELINE:/var/www/html/decameron:rw -v $RUTA_TEMPORAL:/var/www/temporal:rw -v $RUTA_CRT_HW:/var/www/html/securep.decameron.com.crt:rw -v $RUTA_KEY_HW:/var/www/html/securep.decameron.com.key:rw jgomez17/centos-php54:hodeline"
 		eval $command
 		
 		containerId=$(docker inspect --format='{{.Id}}' $i $containerName)
@@ -190,7 +193,9 @@ runEnviroments(){
 			fi
 			if [ ! -z $principalSecure ] ; then
 				hostsHW="docker exec -it $containerId bash -c \"echo '$ipcontainerSecure	$principalSecure' >> /etc/hosts\""
-				eval $hostsHW				
+				eval $hostsHW
+				hostsHW="docker exec -it $containerIdSecure bash -c \"echo '$ipcontainerHW	$principalHW' >> /etc/hosts\""
+				eval $hostsHW	
 			fi
 			if [ ! -z $principalAmadeus ] ; then
 				hostsHW="docker exec -it $containerId bash -c \"echo '$ipcontainerSecure	$principalAmadeus' >> /etc/hosts\""
