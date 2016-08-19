@@ -1,6 +1,7 @@
 FROM jgomez17/centos-php54:site
 ADD ./dockerPromosdecameron/balancer.conf /scripts/balancer.conf
 ADD ./dockerPromosdecameron/httpd-vhosts.conf /etc/httpd/conf/httpd-vhosts.conf
+RUN mkdir /var/www/temporal
 RUN mkdir /var/www/html/www.decameron.com
 RUN mkdir /var/www/html/promos-decameron
 EXPOSE 80

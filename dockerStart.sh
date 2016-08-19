@@ -233,7 +233,7 @@ runEnviroments(){
 			docker rm $(docker inspect --format='{{.Id}}' $i $containerName)
 		fi
 		echo " \-Creando contenedor ($containerName)"
-                command="docker run -dt --name $containerName $RUTA_PARTICULARES -v $RUTA_TEMPORAL:/var/www/temporal/:rw -v $RUTA_CRT_HW:/var/www/html/securep.decameron.com.crt:rw -v $RUTA_KEY_HW:/var/www/html/securep.decameron.com.key:rw $RUTA_AGENCIAS jgomez17/centos-php54:site"
+                command="docker run -dt --name $containerName $RUTA_PARTICULARES -v $RUTA_TEMPORAL:/var/www/temporal:rw -v $RUTA_CRT_HW:/var/www/html/securep.decameron.com.crt:rw -v $RUTA_KEY_HW:/var/www/html/securep.decameron.com.key:rw $RUTA_AGENCIAS jgomez17/centos-php54:site"
 		eval $command
 		
 		containerId=$(docker inspect --format='{{.Id}}' $i $containerName)
