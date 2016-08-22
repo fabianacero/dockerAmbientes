@@ -114,6 +114,8 @@ runEnviroments(){
 			command="docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $i $containerName"	
 			ipcontainerSecure=$(eval $command)
 			if [ ! -z $principalSecure ] ; then
+				hostsSecure="docker exec -it $containerIdSecure bash -c \"echo '$ipcontainerSecure	$principalSecure' >> /etc/hosts\""
+				eval $hostsSecure
 				if ! grep -q "$principalSecure" /etc/hosts ; then 
 					echo "$ipcontainerSecure	$principalSecure" >> /etc/hosts
 				else
