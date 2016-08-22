@@ -123,6 +123,8 @@ runEnviroments(){
 				fi
 			fi
 			if [ ! -z $principalAmadeus ] ; then
+				hostsAmadeus="docker exec -it $containerIdSecure bash -c \"echo '$ipcontainerSecure	$principalAmadeus' >> /etc/hosts\""
+				eval $hostsAmadeus
 				if ! grep -q "$principalAmadeus" /etc/hosts ; then 
 					echo "$ipcontainerSecure	$principalAmadeus" >> /etc/hosts
 				else
@@ -132,6 +134,8 @@ runEnviroments(){
 				fi
 			fi
 			if [ ! -z $principalPnp ] ; then
+				hostsPNP="docker exec -it $containerIdSecure bash -c \"echo '$ipcontainerSecure	$principalPnp' >> /etc/hosts\""
+				eval $hostsPNP
 				if ! grep -q "$principalPnp" /etc/hosts ; then 
 					echo "$ipcontainerSecure	$principalPnp" >> /etc/hosts
 				else
