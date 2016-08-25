@@ -3,5 +3,23 @@ ADD ./dockerHodelineweb/balancer.conf /scripts/balancer.conf
 ADD ./dockerHodelineweb/httpd-vhosts.conf /etc/httpd/conf/httpd-vhosts.conf
 RUN php /scripts/balancer.php
 RUN mkdir /var/www/html/decameron
+# DIRECTORIO TEMPORALES SITES
+RUN mkdir -p /var/www/files/web/file
+RUN chgrp apache /var/&&chgrp apache /var/www/&&chgrp apache /var/www/files/&&chgrp apache /var/www/files/web/&&chgrp apache /var/www/files/web/file
+RUN chmod 775 /var/&&chmod 775 /var/www/&&chmod 775 /var/www/files/&&chmod 775 /var/www/files/web/&&chmod 775 /var/www/files/web/file
+# DIRECTIORIO TEMPORALES HW
+RUN mkdir -p /var/www/files/webhw/file
+RUN chgrp apache /var/www/files/webhw/&&chgrp apache /var/www/files/webhw/file
+RUN chmod 775 /var/www/files/webhw/&&chmod 775 /var/www/files/webhw/file
+# DIRECTORIO DE LOGS
+RUN mkdir -p /var/log/httpd/logAplicacion
+RUN chgrp apache /var/log/&&chgrp apache /var/log/httpd/&&chgrp apache /var/log/httpd/logAplicacion/
+RUN chmod 775 /var/log/&&chmod 775 /var/log/httpd/&&chmod 775 /var/log/httpd/logAplicacion/
+RUN mkdir -p /etc/httpd/ssl
+RUN mkdir -p /tmp-www/web
+RUN chgrp apache /tmp-www/&&chgrp apache /tmp-www/web/
+RUN chmod 775 /tmp-www/&&chmod 775 /tmp-www/web/
+ADD ./securep.decameron.com.crt /etc/httpd/ssl/securep.decameron.com.crt
+ADD ./securep.decameron.com.key /etc/httpd/ssl/securep.decameron.com.key
 EXPOSE 80
 CMD ["/bin/bash"]
