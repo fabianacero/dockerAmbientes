@@ -264,7 +264,7 @@ runEnviroments(){
 				# si existe lo modificamos a la nueva ip
 				sudo cp /etc/hosts /etc/hosts_bk
 				#sudo cat /etc/hosts_bk | sed "s/.*$principalSite/$ipcontainerSite\t$principalSite/g" > /etc/hosts
-				sudo -- sh -c "cat /etc/hosts_bk | sed 's/.*$principalSite/$ipcontainerSite\t$principalSite/g' > /etc/hosts"
+				sudo -- sh -c "cat /etc/hosts_bk | sed 's/.*\t$principalSite/$ipcontainerSite\t$principalSite/g' > /etc/hosts"
 			fi
 			if [ ! -z $principalAgencias ] ; then
 				if ! grep -q "\s${principalAgencias}$" /etc/hosts ; then 
@@ -273,7 +273,7 @@ runEnviroments(){
 					# si existe lo modificamos a la nueva ip
 					sudo cp /etc/hosts /etc/hosts_bk
 					#sudo cat /etc/hosts_bk | sed "s/.*$principalAgencias/$ipcontainerSite\t$principalAgencias/g" > /etc/hosts
-					sudo -- sh -c "cat /etc/hosts_bk | sed 's/.*$principalAgencias/$ipcontainerSite\t$principalAgencias/g' > /etc/hosts"
+					sudo -- sh -c "cat /etc/hosts_bk | sed 's/.*\t$principalAgencias/$ipcontainerSite\t$principalAgencias/g' > /etc/hosts"
 				fi
 			fi
 		fi
