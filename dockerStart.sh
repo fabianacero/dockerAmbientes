@@ -30,7 +30,8 @@ printFinalHelp(){
 	echo "\nPara ingresar a sus servidores ejecute los siguientes comandos:"
 	command="docker inspect --format='{{.Name}}:$ docker exec -it {{.Config.Hostname}} bash' $i $containers"
 	eval $command
-	echo "\n"
+	echo "\nLos servidores site y secure cuentan con certificaciones SSL (opcional)\nruta certificados:\n"
+	echo "/- SSLCertificateFile /etc/pki/tls/certs/certificate.crt\n/- SSLCertificateKeyFile /etc/pki/tls/private/certificate.key"
 	printf "${NC}"
 }
 # Instala el entorno indicado
