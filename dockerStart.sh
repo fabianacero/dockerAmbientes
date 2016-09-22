@@ -4,7 +4,7 @@ parse(){
 	msg="- $1 \n - Numero de argumentos invalido"
 	msg="$msg \n\n dockerStart [options]"
 	msg="$msg \n 	1) -r: run or -i: install"
-	msg="$msg \n 	2) -a: all, -s: site, -h: hodeline, -e: secure"
+	msg="$msg \n 	2) -a: all, -s: site, -h: hodeline, -e: secure, -d: decanet"
 	msg="\n $msg \n"
 	printError "$msg"
 }
@@ -81,6 +81,16 @@ installEnviroments(){
 		# Construye la caja del site
 		echo " \n\n\-Instalando entorno de secure ..."	
 		docker build -t jgomez17/centos-php54:${imageName} -f dockerSecure/DockerFile .
+	fi
+
+	if [ ! -z $ENVDECANET ] && $ENVDECANET; then
+		imageName="decanetp"
+		containerName="el_decanet"
+		deleteChildImageByName $imageName $containerName
+		pullImageByName "decanet"
+		# Construye la caja de decanet
+		echo " \n\n\-Instalando entorno de decanet ..."	
+		docker build -t fabianacero/centos-php54:${imageName} -f dockerDecanet/DockerFile .
 	fi
 
 }
@@ -278,7 +288,52 @@ runEnviroments(){
 			fi
 		fi
 
-        fi
+    fi
+
+	if [ ! -z $ENVDECANET ] && $ENVDECANET; then
+        # Construye la caja de decanet
+        echo " \n\-Corriendo entorno decanet ..."
+		containerName="el_decanet"
+		containers="$containers $containerName"
+		containerId=$(docker inspect --format='{{.Id}}' $i $containerName)
+		# Validando el directorio principal
+		if [ ! -d $RUTA_DECANET ] || [ -z $RUTA_DECANET ] ; then
+			printWarning " \- RUTA_DECANET ($RUTA_DECANET) $msg"
+		else
+			RUTA_DECANET="-v $RUTA_DECANET:/var/www/html/decanet:rw"
+		fi
+		if [ ! -d $RUTA_TEMPORAL ] ; then
+			printError "\n\- ($RUTA_TEMPORAL) $msg"
+		fi
+		# Detiene contenedores del site existentes
+		if [ ! -z $containerId ] ; then
+			stopContainerByName $containerName
+		fi
+		echo " \-Creando contenedor ($containerName)"
+        command="docker run -dt --name $containerName $RUTA_DECANET -v $RUTA_TEMPORAL:/var/www/temporal:rw fabianacero/centos-php54:decanetp"
+		eval $command
+
+		containerId=$(docker inspect --format='{{.Id}}' $i $containerName)
+		if [ ! -z $containerId ] ; then
+			addVhost="docker exec -it $containerId bash -c \"echo 'Include conf/httpd-vhosts.conf' >> /etc/httpd/conf/httpd.conf\""
+			eval $addVhost
+			command="docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $i $containerName"	
+			service="docker exec -it $containerId /bin/bash -c 'service httpd start'"
+			eval $service
+			ipcontainerDecanet=$(eval $command)
+			principalDecanet=$(cat dockerDecanet/balancer.conf | jq ".principal" | sed 's/"//g')
+			if [ ! -z $principalDecanet ] ; then
+				if ! grep -q "\s${principalDecanet}$" /etc/hosts ; then 
+					sudo -- sh -c "echo '$ipcontainerDecanet	$principalDecanet' >> /etc/hosts"
+				else
+					# si existe lo modificamos a la nueva ip
+					sudo cp /etc/hosts /etc/hosts_bk
+					#sudo cat /etc/hosts_bk | sed "s/.*$principalAgencias/$ipcontainerSite\t$principalAgencias/g" > /etc/hosts
+					sudo -- sh -c "cat /etc/hosts_bk | sed 's/.*\t$principalDecanet/$ipcontainerDecanet\t$principalDecanet/g' > /etc/hosts"
+				fi
+			fi
+		fi
+    fi
 }
 
 stopContainerByName(){
@@ -341,6 +396,9 @@ case $param in
 	-e)
 		ENVSECURE=true
 	;;
+	-d)
+		ENVDECANET=true
+	;;
 	*)
 	;;
 esac
@@ -392,7 +450,7 @@ else
 fi
 
 # Valido parametros requeridos
-if [ -z $ENVSITE ] && [ -z $ENVHODELINE ] && [ -z $ENVSECURE ]; then
+if [ -z $ENVSITE ] && [ -z $ENVHODELINE ] && [ -z $ENVSECURE ] && [ -z $ENVDECANET ]; then
         parse "Especifique el entorno a trabajar"
 fi
 # Valida la ruta del archivo de configuracion
