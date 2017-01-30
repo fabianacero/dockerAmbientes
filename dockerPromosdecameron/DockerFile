@@ -22,5 +22,6 @@ RUN chmod 775 /tmp-www/&&chmod 775 /tmp-www/web/
 ADD ./securep.decameron.com.crt /etc/httpd/ssl/securep.decameron.com.crt
 ADD ./securep.decameron.com.key /etc/httpd/ssl/securep.decameron.com.key
 EXPOSE 80
+EXPOSE 443
 CMD ["/bin/bash"]
 
